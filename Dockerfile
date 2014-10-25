@@ -1,33 +1,4 @@
-# Credits docker-library/python:2.7
-FROM buildpack-deps
-
-RUN apt-get update && apt-get install -y curl procps
-
-# remove several traces of debian python
-RUN apt-get purge -y python python-minimal python2.7-minimal
-
-RUN mkdir /usr/src/python
-WORKDIR /usr/src/python
-
-# http://bugs.python.org/issue19846
-# > At the moment, setting "LANG=C" on a Linux system *fundamentally breaks Python 3*, and that's not OK.
-ENV LANG C.UTF-8
-
-ENV PYTHON_VERSION 2.7.8
-
-RUN curl -SL "https://www.python.org/ftp/python/$PYTHON_VERSION/Python-$PYTHON_VERSION.tar.xz" \
-		| tar -xJ --strip-components=1
-# skip "test_file2k" thanks to "AssertionError: IOError not raised"
-# skip "test_mhlib" because it fails on the hub in "test_listfolders" with "AssertionError: Lists differ: [] != ['deep', 'deep/f1', 'deep/f2',..."
-RUN ./configure \
-	&& make -j$(nproc) \
-	&& make EXTRATESTOPTS='--exclude test_file2k test_mhlib' test \
-	&& make install \
-	&& make clean
-
-# install "pip" and "virtualenv", since the vast majority of users of this image will want it
-RUN curl -SL 'https://bootstrap.pypa.io/get-pip.py' | python2
-RUN pip install virtualenv
+FROM python:2.7.8
 
 # nodejs npm bower for Frontend deps
 RUN apt-get update && apt-get install -y \
@@ -50,5 +21,13 @@ RUN curl -SLO "http://nodejs.org/dist/v$NODE_VERSION/node-v$NODE_VERSION-linux-x
 	&& npm install -g npm@"$NPM_VERSION" \
     && npm install -g bower \
 	&& npm cache clear
+
+RUN mkdir -p /usr/src/app
+WORKDIR /usr/src/app
+
+ONBUILD COPY requirements.txt /usr/src/app/
+ONBUILD RUN pip install -r requirements.txt
+
+ONBUILD COPY . /usr/src/app# Credits docker-library/python:2.7
 
 CMD ["python2"]
