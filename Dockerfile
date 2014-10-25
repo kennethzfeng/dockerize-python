@@ -23,12 +23,5 @@ RUN curl -SLO "http://nodejs.org/dist/v$NODE_VERSION/node-v$NODE_VERSION-linux-x
     && npm install -g bower \
 	&& npm cache clear
 
-RUN mkdir -p /usr/src/app
-WORKDIR /usr/src/app
-
-ONBUILD COPY requirements.txt /usr/src/app/
-ONBUILD RUN pip install -r requirements.txt
-
-ONBUILD COPY . /usr/src/app# Credits docker-library/python:2.7
 
 CMD ["python2"]
