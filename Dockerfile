@@ -1,4 +1,5 @@
 FROM python:2.7.8
+MAINTAINER Kenneth Feng <kennethzfeng@gmail.com>
 
 # nodejs npm bower for Frontend deps
 RUN apt-get update && apt-get install -y \
